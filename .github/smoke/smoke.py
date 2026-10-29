@@ -26,7 +26,7 @@ with sync_playwright() as p:
         txt = ""
         for f in frames:
             try:
-                txt += f.inner_text("body")[:400] + " || "
+                txt += f.inner_text("body") + " || "
             except Exception:
                 pass
         w(f"--- t={t}s frames={len(frames)} text: {txt[:800]!r}")
