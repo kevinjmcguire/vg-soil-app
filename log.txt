@@ -1,0 +1,61 @@
+--- t=5s frames=1 text: 'Soil Hydraulic Properties\n· van Genuchten–Mualem\nRosetta3 pedotransfer functions\n1. Soil texture\nSand (%)\nClay (%)\nSilt = 40% · USDA class: loam\n2. Bulk density (optional)\n Use bulk density in the estimate\nBulk density, ρb (g cm−3)\n3. Water content\nVolumetric water content, θ (cm3 cm−3)\nType the value you calculated; no rounding needed.\nOptions\nCustom van Genuchten parameters\nTexture class\nloam\n40% sand · 40% silt · 20% clay\nSuction at θ\n613.3 cm\n6,133 mm · 60.15 kPa\nK at θ\n0.005284 mm/hr\n0.01268 cm/day\nPlant-available water\n0.158\nFC 0.289 − WP 0.130 cm³/cm³\nCurves\nProperties table\nTexture triangle\nEquations & methods\nHow to use\nAbout\nWater retention curve\n0\n0.2\n0.4\n0.6\n10\u200b-1\u200b\n1\n10\n10\u200b2\u200b\n10\u200b3\u200b\n10\u200b4\u200b\n10\u200b5\u200b\n10\u200b6\u200b\n10\u200b7\u200b\n0.01\n0.1\n1\n10\n100\n1,000\n10,000\n100,000\nVolumetric water content, θ (cm³ c'
+RENDERED by t=5s
+=== frame https://kevinjmcguire.github.io/vg-soil-app/
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soil Hydraulic Properties</title>
+<meta name="description" content="Estimate van Genuchten–Mualem soil hydraulic properties from texture and bulk density with the Rosetta3 pedotransfer functions.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23861F41'/%3E%3Cpath d='M16 6c-4 6-7 9.5-7 13a7 7 0 0 0 14 0c0-3.5-3-7-7-13z' fill='%23E5751F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<style id="plotly.js-style-global"></style><style id="plotly.js-style-modebar-2dcbf2"></style><style id="plotly.js-style-modebar-278c7f"></style></head>
+<body>
+<header class="site-header">
+  <h1>Soil Hydraulic Properties</h1>
+  <span class="sub">· van Genuchten–Mualem</span>
+  <span class="course">Rosetta3 pedotransfer functions</span>
+</header>
+
+<div class="loading" id="loading" hidden="">Loading Rosetta…</div>
+
+<div class="layout">
+  <!-- ======================= inputs ======================= -->
+  <aside class="sidebar" aria-label="Inputs">
+    <div class="step">1. Soil texture</div>
+    <div class="field">
+      <label for="sand">Sand (%)</label>
+      <div class="range-row">
+        <input type="range" id="sand-r" min="0" max="100" step="1" value="40" aria-label="Sand percent slider" style="">
+        <input type="number" id="sand" min="0" max="100" step="1" value="40" style="">
+      </div>
+    </div>
+    <div class="field">
+      <label for="clay">Clay (%)</label>
+      <div class="range-row">
+        <input type="range" id="clay-r" min="0" max="100" step="1" value="20" aria-label="Clay percent slider" style="">
+        <input type="number" id="clay" min="0" max="100" step="1" value="20" style="">
+      </div>
+    </div>
+    <div class="hint" id="silt-text">Silt = 40% · USDA class: <b>loam</b></div>
+
+    <div class="step">2. Bulk density <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+    <label class="check"><input type="checkbox" id="use-bd" checked="" style=""> Use bulk density in the estimate</label>
+    <div class="field" id="bd-field">
+      <label for="bd">Bulk density, ρ<sub>b</sub> (g cm<sup>−3</sup>)</label>
+      <input type="number" id="bd" min="0.5" max="2" step="0.01" value="1.40" style="">
+    </div>
+
+    <div class="step">3. Water content</div>
+    <div class="field">
+      <label for="theta">Volumetric water content, θ (cm<sup>3</sup> cm<sup>−3</sup>)</label>
+      <input type="number" id="theta" min="0" max="0.7" step="0.001" value="0.250" style="">
+      <div class="hint">Type the value you calculated; no rounding needed.</div>
+    </div>
+    <div class="err" id="input-err" role="alert"></div>
+
+    <details class="panel">
+      <summary>Options</summary>
+      <fieldset>
+        <legend>Field capacity defined at</legend>
+        <label class="check"><input type="radi
+RESULT: OK
