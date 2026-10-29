@@ -11,7 +11,15 @@ An R Shiny app for teaching soil water. You give it soil **texture** (sand and c
 
 It replaces the Clapp–Hornberger/Cosby-based app previously used in the course.
 
-## Run it
+## Use it online (no R needed)
+
+**<https://kevinjmcguire.github.io/vg-soil-app/>**
+
+The app runs entirely in your web browser through [Shinylive](https://posit-dev.github.io/r-shinylive/), which runs R on WebAssembly. The first load takes 10–30 seconds while R starts in the browser; after that it responds immediately. No data leaves your computer.
+
+The workflow `.github/workflows/deploy-pages.yml` rebuilds and republishes the site on every push to `main`. To set it up the first time, go to repository **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
+
+## Run it in R
 
 You need R (≥ 4.1) and two packages:
 
@@ -27,7 +35,9 @@ shiny::runGitHub("vg-soil-app", "kevinjmcguire")
 
 **From a local copy:** open `app.R` in RStudio and click **Run App**, or run `shiny::runApp("path/to/vg-soil-app")`.
 
-## Put it online for students
+## Other hosting options
+
+GitHub Pages (above) is the default. The app can also run on a server:
 
 **shinyapps.io** (free tier available):
 
