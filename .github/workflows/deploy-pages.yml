@@ -1,6 +1,7 @@
-# Build the app with Shinylive (R running in the browser via WebAssembly) and
-# publish it to GitHub Pages: https://kevinjmcguire.github.io/vg-soil-app/
+# Publish the browser version of the app (docs/) to GitHub Pages:
+# https://kevinjmcguire.github.io/vg-soil-app/
 #
+# docs/ is plain HTML/CSS/JavaScript, so there is no build step.
 # One-time setup: repository Settings > Pages > Build and deployment >
 # Source: "GitHub Actions". After that, every push to main redeploys.
 name: deploy-pages
@@ -20,34 +21,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: r-lib/actions/setup-r@v2
+      - uses: actions/setup-node@v4
         with:
-          use-public-rspm: true
-
-      - name: Install shinylive
-        run: Rscript -e 'install.packages(c("shinylive", "shiny", "bslib"))'
-
-      - name: Export app (only the files the app needs)
-        run: |
-          mkdir -p _app
-          cp -r app.R R data www _app/
-          Rscript -e 'shinylive::export("_app", "_site")'
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
+          node-version: 20
+      - name: JavaScript Rosetta reference test
+        run: node tests/test_rosetta_js.js
 
   deploy:
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
       - id: deployment
         uses: actions/deploy-pages@v4

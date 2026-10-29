@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soil Hydraulic Properties</title>
+<meta name="description" content="Estimate van Genuchten–Mualem soil hydraulic properties from texture and bulk density with the Rosetta3 pedotransfer functions.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23861F41'/%3E%3Cpath d='M16 6c-4 6-7 9.5-7 13a7 7 0 0 0 14 0c0-3.5-3-7-7-13z' fill='%23E5751F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <h1>Soil Hydraulic Properties</h1>
+  <span class="sub">&middot; van Genuchten&ndash;Mualem</span>
+  <span class="course">Rosetta3 pedotransfer functions</span>
+</header>
+
+<div class="loading" id="loading">Loading Rosetta&hellip;</div>
+
+<div class="layout">
+  <!-- ======================= inputs ======================= -->
+  <aside class="sidebar" aria-label="Inputs">
+    <div class="step">1. Soil texture</div>
+    <div class="field">
+      <label for="sand">Sand (%)</label>
+      <div class="range-row">
+        <input type="range" id="sand-r" min="0" max="100" step="1" value="40" aria-label="Sand percent slider">
+        <input type="number" id="sand" min="0" max="100" step="1" value="40">
+      </div>
+    </div>
+    <div class="field">
+      <label for="clay">Clay (%)</label>
+      <div class="range-row">
+        <input type="range" id="clay-r" min="0" max="100" step="1" value="20" aria-label="Clay percent slider">
+        <input type="number" id="clay" min="0" max="100" step="1" value="20">
+      </div>
+    </div>
+    <div class="hint" id="silt-text"></div>
+
+    <div class="step">2. Bulk density <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+    <label class="check"><input type="checkbox" id="use-bd" checked> Use bulk density in the estimate</label>
+    <div class="field" id="bd-field">
+      <label for="bd">Bulk density, &rho;<sub>b</sub> (g cm<sup>&minus;3</sup>)</label>
+      <input type="number" id="bd" min="0.5" max="2" step="0.01" value="1.40">
+    </div>
+
+    <div class="step">3. Water content</div>
+    <div class="field">
+      <label for="theta">Volumetric water content, &theta; (cm<sup>3</sup> cm<sup>&minus;3</sup>)</label>
+      <input type="number" id="theta" min="0" max="0.7" step="0.001" value="0.250">
+      <div class="hint">Type the value you calculated; no rounding needed.</div>
+    </div>
+    <div class="err" id="input-err" role="alert"></div>
+
+    <details class="panel">
+      <summary>Options</summary>
+      <fieldset>
+        <legend>Field capacity defined at</legend>
+        <label class="check"><input type="radio" name="fc" value="33" checked> &minus;33 kPa (330 cm; standard)</label>
+        <label class="check"><input type="radio" name="fc" value="10"> &minus;10 kPa (100 cm; often used for sandy soils)</label>
+      </fieldset>
+      <fieldset>
+        <legend>Unsaturated K model</legend>
+        <label class="check"><input type="radio" name="kmodel" value="classic" checked> Mualem&ndash;van Genuchten with K<sub>s</sub>, L = 0.5 (classic)</label>
+        <label class="check"><input type="radio" name="kmodel" value="rosetta"> Rosetta K<sub>0</sub> and L (Schaap &amp; Leij, 2000)</label>
+      </fieldset>
+      <label class="check"><input type="checkbox" id="band" checked> Show Rosetta uncertainty band (5&ndash;95%)</label>
+    </details>
+
+    <details class="panel" id="custom-panel">
+      <summary>Custom van Genuchten parameters</summary>
+      <label class="check"><input type="checkbox" id="custom"> Override the Rosetta estimates</label>
+      <div class="grid2" id="custom-fields">
+        <div><label class="label" for="c-thr">&theta;<sub>r</sub></label><input type="number" id="c-thr" step="0.001"></div>
+        <div><label class="label" for="c-ths">&theta;<sub>s</sub></label><input type="number" id="c-ths" step="0.001"></div>
+        <div><label class="label" for="c-alpha">&alpha; (1/cm)</label><input type="number" id="c-alpha" step="0.0001"></div>
+        <div><label class="label" for="c-n">n</label><input type="number" id="c-n" step="0.001"></div>
+        <div><label class="label" for="c-ks">K<sub>s</sub> (cm/day)</label><input type="number" id="c-ks" step="0.1"></div>
+        <div><label class="label" for="c-l">L</label><input type="number" id="c-l" step="0.1" value="0.5"></div>
+      </div>
+    </details>
+  </aside>
+
+  <!-- ======================= outputs ======================= -->
+  <main class="main">
+    <section class="boxes" aria-live="polite">
+      <div class="vbox vb1"><div class="t">Texture class</div><div class="v" id="vb-tex">&ndash;</div><div class="s" id="vb-tex-s"></div></div>
+      <div class="vbox vb2"><div class="t">Suction at &theta;</div><div class="v" id="vb-h">&ndash;</div><div class="s" id="vb-h-s"></div></div>
+      <div class="vbox vb3"><div class="t">K at &theta;</div><div class="v" id="vb-k">&ndash;</div><div class="s" id="vb-k-s"></div></div>
+      <div class="vbox vb4"><div class="t">Plant-available water</div><div class="v" id="vb-paw">&ndash;</div><div class="s" id="vb-paw-s"></div></div>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="tab-curves" id="t-curves">Curves</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-table" id="t-table">Properties table</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-tri" id="t-tri">Texture triangle</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-methods" id="t-methods">Equations &amp; methods</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-howto" id="t-howto">How to use</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-about" id="t-about">About</button>
+    </nav>
+
+    <section class="tabpanel" id="tab-curves" role="tabpanel" aria-labelledby="t-curves">
+      <div class="cards">
+        <div class="card">
+          <div class="card-h">Water retention curve</div>
+          <div class="card-b"><div class="plot" id="p-ret"></div></div>
+          <div class="card-f">Orange dot: your &theta;. Shaded band: 5&ndash;95% range of the 1,000 Rosetta predictions.
+            Dotted orange line: approximate air-entry suction, 1/&alpha;. Hover over a curve to read values.</div>
+        </div>
+        <div class="card">
+          <div class="card-h">Hydraulic conductivity
+            <span class="seg" role="group" aria-label="Plot K against">
+              <button id="kx-theta" aria-pressed="true">vs. &theta;</button><button id="kx-h" aria-pressed="false">vs. suction</button>
+            </span>
+          </div>
+          <div class="card-b"><div class="plot" id="p-k"></div></div>
+          <div class="card-f" id="k-foot">K from the Mualem&ndash;van Genuchten model.</div>
+        </div>
+      </div>
+      <div id="warn"></div>
+    </section>
+
+    <section class="tabpanel" id="tab-table" role="tabpanel" aria-labelledby="t-table" hidden>
+      <div class="card">
+        <div class="card-h">Properties of the specified soil
+          <span><button class="btn" id="dl-props">Download table (CSV)</button> <button class="btn" id="dl-curve">Download curve data (CSV)</button></span>
+        </div>
+        <div class="card-b table-wrap"><table class="props" id="props"></table></div>
+      </div>
+    </section>
+
+    <section class="tabpanel" id="tab-tri" role="tabpanel" aria-labelledby="t-tri" hidden>
+      <div class="card">
+        <div class="card-h">USDA soil texture triangle</div>
+        <div class="card-b"><canvas id="triangle" role="img" aria-label="USDA texture triangle with your soil marked"></canvas></div>
+      </div>
+    </section>
+
+    <section class="tabpanel prose" id="tab-methods" role="tabpanel" aria-labelledby="t-methods" hidden>
+      <h2>Water retention: van Genuchten (1980)</h2>
+      <p>Suction <var>h</var> is positive (cm of water); matric potential &psi; = &minus;<var>h</var>. Effective saturation and water content are</p>
+      <div class="eq"><var>S</var><sub>e</sub> = (&theta; &minus; &theta;<sub>r</sub>) / (&theta;<sub>s</sub> &minus; &theta;<sub>r</sub>) = [1 + (&alpha;<var>h</var>)<sup><var>n</var></sup>]<sup>&minus;<var>m</var></sup>, &emsp; <var>m</var> = 1 &minus; 1/<var>n</var></div>
+      <div class="eq">&theta;(<var>h</var>) = &theta;<sub>r</sub> + (&theta;<sub>s</sub> &minus; &theta;<sub>r</sub>) [1 + (&alpha;<var>h</var>)<sup><var>n</var></sup>]<sup>&minus;<var>m</var></sup></div>
+      <p>Inverting gives the suction at a known water content:</p>
+      <div class="eq"><var>h</var>(&theta;) = (1/&alpha;) &middot; (<var>S</var><sub>e</sub><sup>&minus;1/<var>m</var></sup> &minus; 1)<sup>1/<var>n</var></sup></div>
+      <table>
+        <tr><th>Parameter</th><th>Meaning</th></tr>
+        <tr><td>&theta;<sub>r</sub></td><td>residual water content: water held so tightly it does not drain</td></tr>
+        <tr><td>&theta;<sub>s</sub></td><td>saturated water content: close to, but usually a little less than, total porosity</td></tr>
+        <tr><td>&alpha; (1/cm)</td><td>related to the inverse of the air-entry suction; larger in coarse soils</td></tr>
+        <tr><td><var>n</var></td><td>pore-size distribution: larger <var>n</var> means a narrow range of pore sizes and a sharper drop in &theta;</td></tr>
+      </table>
+      <p><b>Air-entry suction.</b> The van Genuchten curve has no sharp air-entry point (unlike Brooks&ndash;Corey or Clapp&ndash;Hornberger). The value 1/&alpha; is used as an approximate air-entry suction: it marks where the curve begins to bend and drain noticeably.</p>
+
+      <h2>Unsaturated hydraulic conductivity: Mualem (1976)</h2>
+      <div class="eq"><var>K</var>(<var>S</var><sub>e</sub>) = <var>K</var><sub>0</sub> <var>S</var><sub>e</sub><sup><var>L</var></sup> [1 &minus; (1 &minus; <var>S</var><sub>e</sub><sup>1/<var>m</var></sup>)<sup><var>m</var></sup>]<sup>2</sup></div>
+      <ul>
+        <li><b>Classic Mualem&ndash;van Genuchten (default):</b> <var>K</var><sub>0</sub> = <var>K</var><sub>s</sub> and <var>L</var> = 0.5.</li>
+        <li><b>Rosetta <var>K</var><sub>0</sub> and <var>L</var>:</b> Schaap &amp; Leij (2000) fitted <var>K</var><sub>0</sub> and <var>L</var> to measured unsaturated conductivity data. These usually describe unsaturated <var>K</var> better than extrapolating from <var>K</var><sub>s</sub>, but <var>K</var> at saturation then differs from <var>K</var><sub>s</sub>.</li>
+      </ul>
+
+      <h2>Pedotransfer functions: Rosetta3</h2>
+      <p>The parameters &theta;<sub>r</sub>, &theta;<sub>s</sub>, &alpha;, <var>n</var>, and <var>K</var><sub>s</sub> come from <b>Rosetta3</b> (Schaap et al., 2001; Zhang &amp; Schaap, 2017). Rosetta is an ensemble of 1,000 bootstrap-trained neural networks.</p>
+      <ul>
+        <li><b>Model 2</b> uses sand, silt, and clay.</li>
+        <li><b>Model 3</b> adds bulk density (0.5&ndash;2.0 g cm<sup>&minus;3</sup>).</li>
+      </ul>
+      <p>The value reported is the mean of the ensemble. The shaded band spans the 5th&ndash;95th percentiles of the 1,000 predictions; it shows how uncertain an estimate from texture alone really is. This page runs entirely in your browser; its JavaScript reproduces the USDA-ARS <code>rosetta-soil</code> package (v0.3.2) to better than one part in 10<sup>7</sup>.</p>
+
+      <h2>Water-holding points</h2>
+      <ul>
+        <li><b>Field capacity:</b> &theta; at &minus;33 kPa (337 cm suction) by default; &minus;10 kPa is an option often used for sandy soils.</li>
+        <li><b>Permanent wilting point:</b> &theta; at &minus;1500 kPa (15,300 cm suction).</li>
+        <li><b>Plant-available water</b> = field capacity &minus; wilting point.</li>
+      </ul>
+
+      <h2>Units</h2>
+      <p>1 kPa = 10.197 cm of water = 101.97 mm of water. &ensp; 1 cm/day = 0.4167 mm/hr.</p>
+
+      <h2>References</h2>
+      <ul>
+        <li>Mualem, Y. (1976). A new model for predicting the hydraulic conductivity of unsaturated porous media. <i>Water Resources Research</i> 12:513&ndash;522.</li>
+        <li>Schaap, M.G., Leij, F.J. (2000). Improved prediction of unsaturated hydraulic conductivity with the Mualem&ndash;van Genuchten model. <i>Soil Sci. Soc. Am. J.</i> 64:843&ndash;851.</li>
+        <li>Schaap, M.G., Leij, F.J., van Genuchten, M.Th. (2001). ROSETTA: a computer program for estimating soil hydraulic parameters with hierarchical pedotransfer functions. <i>J. Hydrology</i> 251:163&ndash;176.</li>
+        <li>van Genuchten, M.Th. (1980). A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. <i>Soil Sci. Soc. Am. J.</i> 44:892&ndash;898.</li>
+        <li>Zhang, Y., Schaap, M.G. (2017). Weighted recalibration of the Rosetta pedotransfer model with improved estimates of hydraulic parameter distributions and summary statistics (Rosetta3). <i>J. Hydrology</i> 547:39&ndash;53.</li>
+      </ul>
+    </section>
+
+    <section class="tabpanel prose" id="tab-howto" role="tabpanel" aria-labelledby="t-howto" hidden>
+      <h2>Using the app for the soil water homework</h2>
+      <ol>
+        <li><b>Texture:</b> set <i>Sand (%)</i> and <i>Clay (%)</i> from your soil description, with the slider or by typing. Silt and the USDA texture class are filled in automatically.</li>
+        <li><b>Bulk density:</b> leave <i>Use bulk density</i> checked and type the bulk density you calculated from the soil core (g cm<sup>&minus;3</sup>). Rosetta then uses your soil&rsquo;s actual packing, not just its texture.</li>
+        <li><b>Water content:</b> type the field volumetric water content, &theta;, you calculated from the core. Type it exactly; there is no slider to round to.</li>
+        <li><b>Read the results</b> in the boxes at the top, or in the <i>Properties table</i> tab:
+          <ul>
+            <li><b>Field capacity</b> and <b>wilting point:</b> water contents at &minus;33 kPa and &minus;1500 kPa.</li>
+            <li><b>Hydraulic conductivity at your &theta;.</b> Compare it with <i>K<sub>s</sub></i>: unsaturated K is often orders of magnitude smaller.</li>
+            <li><b>Suction (matric potential) at your &theta;,</b> reported in mm, cm, and kPa.</li>
+            <li><b>Approximate air-entry suction, 1/&alpha;.</b> On the retention graph it is the orange dotted line, where the curve starts to bend away from saturation.</li>
+          </ul>
+        </li>
+        <li><b>Units matter.</b> Check what units the question asks for. The table gives suction in mm, cm, and kPa, and K in mm/hr, cm/day, and mm/s.</li>
+      </ol>
+      <h2>Things to try</h2>
+      <ul>
+        <li>Move the clay slider and watch how the retention curve and K change. Which soil holds more water at field capacity? Which drains faster?</li>
+        <li>Untick <i>Use bulk density</i> to see how much the estimate depends on packing.</li>
+        <li>Look at the shaded uncertainty band. How confident should you be in a hydraulic property estimated only from texture?</li>
+        <li>Switch the K model to <i>Rosetta K<sub>0</sub> and L</i> and compare K at your &theta;.</li>
+        <li>Open <i>Custom van Genuchten parameters</i> and change <i>n</i> or <i>&alpha;</i> to see what each parameter controls.</li>
+      </ul>
+    </section>
+
+    <section class="tabpanel prose" id="tab-about" role="tabpanel" aria-labelledby="t-about" hidden>
+      <h2>About this app</h2>
+      <p>This page runs entirely in your web browser: nothing is installed and no data are sent anywhere. It estimates van Genuchten&ndash;Mualem hydraulic properties with the Rosetta3 pedotransfer functions, ported to JavaScript from the public-domain USDA-ARS <code>rosetta-soil</code> package.</p>
+      <p>Source code, tests, and an equivalent R Shiny version:
+        <a href="https://github.com/kevinjmcguire/vg-soil-app" target="_blank" rel="noopener">github.com/kevinjmcguire/vg-soil-app</a></p>
+      <p>Run the R version locally:</p>
+      <pre><code>install.packages(c("shiny", "bslib"))
+shiny::runGitHub("vg-soil-app", "kevinjmcguire")</code></pre>
+      <p>Code: MIT License. Rosetta network weights: CC0 1.0 (USDA-ARS). Plots: plotly.js (MIT).</p>
+    </section>
+
+    <footer>Soil Hydraulic Properties &middot; van Genuchten&ndash;Mualem with Rosetta3 &middot;
+      <a href="https://github.com/kevinjmcguire/vg-soil-app" target="_blank" rel="noopener">source on GitHub</a></footer>
+  </main>
+</div>
+
+<script src="vendor/plotly-basic-2.35.2.min.js"></script>
+<script src="data/rose3_mod2.js"></script>
+<script src="data/rose3_mod3.js"></script>
+<script src="data/rose1_unsat_k.js"></script>
+<script src="js/rosetta.js"></script>
+<script src="js/soil.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

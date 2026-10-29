@@ -12,3 +12,8 @@ jobs:
         run: Rscript tests/test_rosetta.R
       - name: App parses
         run: Rscript -e 'for (f in c("app.R", list.files("R", full.names = TRUE))) parse(f)'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: JavaScript Rosetta reference test
+        run: node tests/test_rosetta_js.js
