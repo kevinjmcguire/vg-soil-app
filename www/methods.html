@@ -1,0 +1,64 @@
+<h3 id="water-retention-van-genuchten-1980">Water retention: van Genuchten (1980)</h3>
+<p>Suction \(h\) is positive (cm of water); matric potential \(\psi = -h\). Effective saturation and water content are</p>
+<p>$$S_e = \frac{\theta - \theta_r}{\theta_s - \theta_r} = \left[1 + (\alpha h)^n\right]^{-m}, \qquad m = 1 - \frac{1}{n}$$</p>
+<p>$$\theta(h) = \theta_r + (\theta_s - \theta_r)\left[1 + (\alpha h)^n\right]^{-m}$$</p>
+<p>Inverting gives the suction at a known water content:</p>
+<p>$$h(\theta) = \frac{1}{\alpha}\left(S_e^{-1/m} - 1\right)^{1/n}$$</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\theta_r\)</td>
+<td>residual water content: water held so tightly it does not drain</td>
+</tr>
+<tr>
+<td>\(\theta_s\)</td>
+<td>saturated water content: close to, but usually a little less than, total porosity</td>
+</tr>
+<tr>
+<td>\(\alpha\) (1/cm)</td>
+<td>related to the inverse of the air-entry suction; larger in coarse soils</td>
+</tr>
+<tr>
+<td>\(n\)</td>
+<td>pore-size distribution: larger \(n\) means a narrow range of pore sizes and a sharper drop in \(\theta\)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Air-entry suction.</strong> The van Genuchten curve has no sharp air-entry point (unlike Brooks–Corey or Clapp–Hornberger). The value \(1/\alpha\) is used as an approximate air-entry suction: it marks where the curve begins to bend and drain noticeably.</p>
+<h3 id="unsaturated-hydraulic-conductivity-mualem-1976-with-van-genuchten">Unsaturated hydraulic conductivity: Mualem (1976) with van Genuchten</h3>
+<p>$$K(S_e) = K_0 S_e^{L}\left[1 - \left(1 - S_e^{1/m}\right)^m\right]^2$$</p>
+<ul>
+<li><strong>Classic Mualem–van Genuchten (default):</strong> \(K_0 = K_s\) and \(L = 0.5\).</li>
+<li><strong>Rosetta \(K_0\) and \(L\):</strong> Schaap &amp; Leij (2000) fitted \(K_0\) and \(L\) to measured unsaturated conductivity data. These usually describe unsaturated \(K\) better than extrapolating from \(K_s\), but \(K\) at saturation then differs from \(K_s\).</li>
+</ul>
+<h3 id="pedotransfer-functions-rosetta3">Pedotransfer functions: Rosetta3</h3>
+<p>The parameters \(\theta_r, \theta_s, \alpha, n,\) and \(K_s\) come from <strong>Rosetta3</strong> (Schaap et al., 2001; Zhang &amp; Schaap, 2017). Rosetta is an ensemble of 1,000 bootstrap-trained neural networks.</p>
+<ul>
+<li><strong>Model 2</strong> uses sand, silt, and clay.</li>
+<li><strong>Model 3</strong> adds bulk density.</li>
+</ul>
+<p>The value reported is the mean of the ensemble. The shaded band on the curves spans the 5th–95th percentiles of the 1,000 predictions. It shows how uncertain an estimate from texture alone really is.</p>
+<p>This app’s R code reproduces the USDA-ARS <code>rosetta-soil</code> package (v0.3.2) to machine precision (see <code>tests/</code>).</p>
+<h3 id="water-holding-points">Water-holding points</h3>
+<ul>
+<li><strong>Field capacity:</strong> \(\theta\) at \(-33\) kPa (330 cm suction) by default. The \(-10\) kPa option is often used for sandy soils.</li>
+<li><strong>Permanent wilting point:</strong> \(\theta\) at \(-1500\) kPa (15,300 cm suction).</li>
+<li><strong>Plant-available water</strong> = field capacity − wilting point.</li>
+</ul>
+<h3 id="units">Units</h3>
+<p>\(1\ \text{kPa} = 10.197\) cm of water = 101.97 mm of water; 1 cm/day = 0.4167 mm/hr.</p>
+<h3 id="references">References</h3>
+<ul>
+<li>Mualem, Y. (1976). A new model for predicting the hydraulic conductivity of unsaturated porous media. <em>Water Resources Research</em> 12:513–522.</li>
+<li>Schaap, M.G., Leij, F.J. (2000). Improved prediction of unsaturated hydraulic conductivity with the Mualem–van Genuchten model. <em>Soil Sci. Soc. Am. J.</em> 64:843–851.</li>
+<li>Schaap, M.G., Leij, F.J., van Genuchten, M.Th. (2001). ROSETTA: a computer program for estimating soil hydraulic parameters with hierarchical pedotransfer functions. <em>J. Hydrology</em> 251:163–176.</li>
+<li>van Genuchten, M.Th. (1980). A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. <em>Soil Sci. Soc. Am. J.</em> 44:892–898.</li>
+<li>Zhang, Y., Schaap, M.G. (2017). Weighted recalibration of the Rosetta pedotransfer model with improved estimates of hydraulic parameter distributions and summary statistics (Rosetta3). <em>J. Hydrology</em> 547:39–53.</li>
+</ul>
+
