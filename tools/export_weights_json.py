@@ -1,0 +1,22 @@
+"""Export Rosetta3 network weights (CC0, USDA-ARS rosetta-soil v0.3.2) to compact
+JSON for the browser version in docs/.  Values keep 10 significant digits.
+Usage: python export_weights_json.py <unzipped-rosetta-soil-wheel> docs/data"""
+import json, sys, numpy as np
+src, out = sys.argv[1], sys.argv[2]
+def r(a): return [float(f"{x:.10g}") for x in np.ravel(a)]
+for name, outname in [("rose3_mod2_0", "rose3_mod2"), ("rose3_mod3_0", "rose3_mod3"), ("rose1_unsat_k", "rose1_unsat_k")]:
+    d = np.load(f"{src}/rosetta/data/{name}.npz", allow_pickle=True)
+    W = d["weights"].tolist(); B = d["biases"].tolist()
+    nl, nb = int(d["nlayer"].item()), int(d["nboot"].item())
+    layers = []
+    for i in range(nl):
+        Ws = np.stack([np.asarray(W[k][i], float) for k in range(nb)])        # nboot x out x in
+        bs = np.stack([np.atleast_1d(np.asarray(B[k][i], float)) for k in range(nb)])
+        layers.append({"activate": d["layers"].tolist()[i]["activate"], "nout": Ws.shape[1], "nin": Ws.shape[2],
+                       "W": r(Ws), "b": r(bs)})
+    obj = {"name": str(d["name"].item()), "nboot": nb, "ninput": int(d["ninput"].item()),
+           "inputs": [{"scale": c["scale"], "params": r(c["params"])} for c in d["inputs"].tolist()],
+           "outputs": [{"scale": c["scale"], "params": r(c["params"])} for c in d["outputs"].tolist()],
+           "layers": layers}
+    json.dump(obj, open(f"{out}/{outname}.json", "w"), separators=(",", ":"))
+    print(outname, "ok")
